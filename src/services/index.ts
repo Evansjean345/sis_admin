@@ -1,7 +1,10 @@
+export { auditService } from "./audit.service";
 export { authService } from "./auth.service";
 export { commandService, runWithSync, securityService } from "./command.service";
 export { deviceService } from "./device.service";
 export { flespiService } from "./flespi.service";
+export { deviceGroupService, type GroupService, vehicleGroupService } from "./group.service";
+export { organizationService } from "./organization.service";
 export { roleService } from "./role.service";
 export { userService } from "./user.service";
 export { vehicleService } from "./vehicle.service";

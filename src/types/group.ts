@@ -1,0 +1,89 @@
+import type { PaginationParams } from "./api";
+
+/**
+ * Groupes de véhicules (flottes) et groupes de boîtiers (lots).
+ *
+ * Les deux familles sont SYMÉTRIQUES côté API : mêmes champs, mêmes règles,
+ * mêmes codes d'erreur. Seuls changent le préfixe d'URL et la clé du corps
+ * d'affectation (`vehicleIds` / `deviceIds`). Les types le restent aussi —
+ * une divergence de forme ici serait une surprise, pas une fonctionnalité.
+ */
+
+/** `vehicle_group` | `device_group` — type de ressource dans le journal d'audit. */
+export type GroupKind = "vehicle_group" | "device_group";
+
+export interface Group {
+  id: string;
+  organizationId: string;
+  name: string;
+  description: string | null;
+  /** Format `#RRGGBB`, ou `null` si non renseigné. */
+  color: string | null;
+  createdAt: string;
+  updatedAt: string;
+  /** Effectif du groupe, calculé par l'API en une requête agrégée. */
+  membersCount: number;
+}
+
+/**
+ * Membre d'un groupe.
+ *
+ * `label` est l'étiquette d'affichage choisie par l'API : immatriculation
+ * pour un véhicule, IMEI pour un boîtier.
+ */
+export interface GroupMember {
+  id: string;
+  label: string;
+  addedAt: string;
+}
+
+/** GET /vehicle-groups/:id · GET /device-groups/:id */
+export interface GroupDetail extends Group {
+  members: GroupMember[];
+}
+
+/**
+ * Résultat d'une affectation en lot — l'opération est IDEMPOTENTE.
+ *
+ *   applied   : effectivement ajoutés
+ *   unchanged : déjà membres (rejouer la même sélection n'est pas une erreur)
+ *   rejected  : inconnus, supprimés, ou appartenant à une AUTRE organisation
+ *
+ * Un lot ENTIÈREMENT refusé donne un 422 `E_MEMBERS_OUT_OF_SCOPE`.
+ */
+export interface MembershipChange {
+  applied: string[];
+  unchanged: string[];
+  rejected: string[];
+}
+
+export interface GroupListParams extends PaginationParams {
+  search?: string;
+}
+
+export interface CreateGroupPayload {
+  /** 2 à 80 caractères, unique par organisation (casse ignorée). */
+  name: string;
+  description?: string;
+  /** `#RRGGBB` — toute autre écriture est refusée en 422. */
+  color?: string;
+}
+
+export type UpdateGroupPayload = Partial<CreateGroupPayload>;
+
+/** Plafond d'un lot d'affectation côté API : au-delà, c'est un import. */
+export const MAX_GROUP_MEMBERS = 200;
+
+/** Palette proposée dans le formulaire — des couleurs lisibles en clair comme en sombre. */
+export const GROUP_COLORS = [
+  "#1D4ED8",
+  "#0EA5E9",
+  "#059669",
+  "#65A30D",
+  "#CA8A04",
+  "#EA580C",
+  "#B91C1C",
+  "#DB2777",
+  "#7C3AED",
+  "#475569",
+] as const;

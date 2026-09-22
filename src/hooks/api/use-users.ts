@@ -1,9 +1,18 @@
 "use client";
 
-import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 
 import { userService } from "@/services/user.service";
-import type { CreateUserPayload, UpdateUserPayload, UserListParams } from "@/types/user";
+import type {
+  CreateUserPayload,
+  UpdateUserPayload,
+  UserListParams,
+} from "@/types/user";
 
 import { queryKeys } from "./query-keys";
 
@@ -15,7 +24,10 @@ export function useUsers(params: UserListParams = {}) {
   });
 }
 
-export function useUser(id: string | undefined, options: { enabled?: boolean } = {}) {
+export function useUser(
+  id: string | undefined,
+  options: { enabled?: boolean } = {},
+) {
   return useQuery({
     queryKey: queryKeys.users.detail(id ?? ""),
     queryFn: () => userService.get(id as string),
@@ -28,15 +40,18 @@ export function useCreateUser() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (payload: CreateUserPayload) => userService.create(payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.users.all }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.all }),
   });
 }
 
 export function useUpdateUser() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, payload }: { id: string; payload: UpdateUserPayload }) => userService.update(id, payload),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.users.all }),
+    mutationFn: ({ id, payload }: { id: string; payload: UpdateUserPayload }) =>
+      userService.update(id, payload),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.all }),
   });
 }
 
@@ -44,7 +59,8 @@ export function useSuspendUser() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => userService.suspend(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.users.all }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.all }),
   });
 }
 
@@ -52,6 +68,7 @@ export function useDeleteUser() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (id: string) => userService.remove(id),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.users.all }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.all }),
   });
 }

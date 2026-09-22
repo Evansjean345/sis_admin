@@ -7,10 +7,11 @@ import type { CreateVehiclePayload, UpdateVehiclePayload, VehicleListParams } fr
 
 import { queryKeys } from "./query-keys";
 
-export function useVehicles(params: VehicleListParams = {}) {
+export function useVehicles(params: VehicleListParams = {}, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: queryKeys.vehicles.list(params),
     queryFn: () => vehicleService.list(params),
+    enabled: options.enabled ?? true,
     placeholderData: keepPreviousData,
   });
 }

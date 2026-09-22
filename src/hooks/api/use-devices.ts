@@ -13,10 +13,11 @@ import type {
 
 import { queryKeys } from "./query-keys";
 
-export function useDevices(params: DeviceListParams = {}) {
+export function useDevices(params: DeviceListParams = {}, options: { enabled?: boolean } = {}) {
   return useQuery({
     queryKey: queryKeys.devices.list(params),
     queryFn: () => deviceService.list(params),
+    enabled: options.enabled ?? true,
     placeholderData: keepPreviousData,
   });
 }

@@ -10,11 +10,24 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { PaginationMeta } from "@/types/api";
 
 interface PaginationBarProps {
-  meta: PaginationMeta | undefined;
+  /**
+   * Seuls les compteurs sont lus : le journal d'audit renvoie la même `meta`
+   * que Lucid mais SANS les URLs de page, et doit pouvoir réutiliser la barre.
+   */
+  meta:
+    | Pick<PaginationMeta, "total" | "perPage" | "currentPage" | "lastPage">
+    | undefined;
   perPage: number;
   onPageChange: (page: number) => void;
   onPerPageChange: (perPage: number) => void;
@@ -51,7 +64,9 @@ export function PaginationBar({
               size="sm"
               href="#"
               text=""
-              className={page <= 1 ? "pointer-events-none opacity-50" : undefined}
+              className={
+                page <= 1 ? "pointer-events-none opacity-50" : undefined
+              }
               onClick={(e) => {
                 stop(e);
                 onPageChange(page - 1);
@@ -71,7 +86,9 @@ export function PaginationBar({
               size="sm"
               href="#"
               text=""
-              className={page >= last ? "pointer-events-none opacity-50" : undefined}
+              className={
+                page >= last ? "pointer-events-none opacity-50" : undefined
+              }
               onClick={(e) => {
                 stop(e);
                 onPageChange(page + 1);
@@ -82,7 +99,10 @@ export function PaginationBar({
       </Pagination>
       <div className="flex items-center gap-2">
         <span className="text-muted-foreground text-sm">Lignes par page</span>
-        <Select value={`${perPage}`} onValueChange={(v) => onPerPageChange(Number(v))}>
+        <Select
+          value={`${perPage}`}
+          onValueChange={(v) => onPerPageChange(Number(v))}
+        >
           <SelectTrigger size="sm" className="w-20">
             <SelectValue />
           </SelectTrigger>

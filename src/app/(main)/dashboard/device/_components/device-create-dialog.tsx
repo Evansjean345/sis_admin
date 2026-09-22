@@ -29,14 +29,29 @@ import {
   FieldSeparator,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateDevice } from "@/hooks/api/use-devices";
-import { useChannels, useDeviceTypes, useFlespiHealth } from "@/hooks/api/use-flespi";
+import {
+  useChannels,
+  useDeviceTypes,
+  useFlespiHealth,
+} from "@/hooks/api/use-flespi";
 import { getErrorMessage } from "@/lib/axios";
-import { type CreateDevicePayload, DEVICE_MANUFACTURERS, type DeviceManufacturer } from "@/types/device";
+import {
+  type CreateDevicePayload,
+  DEVICE_MANUFACTURERS,
+  type DeviceManufacturer,
+} from "@/types/device";
 
 const schema = z
   .object({
@@ -44,29 +59,43 @@ const schema = z
     terminalId: z
       .string()
       .trim()
-      .refine((v) => v === "" || /^\d{6,20}$/.test(v), { message: "6 à 20 chiffres (champ « ID » de l'étiquette)." }),
-    model: z.string().trim().min(2, { message: "2 caractères minimum." }).max(40),
+      .refine((v) => v === "" || /^\d{6,20}$/.test(v), {
+        message: "6 à 20 chiffres (champ « ID » de l'étiquette).",
+      }),
+    model: z
+      .string()
+      .trim()
+      .min(2, { message: "2 caractères minimum." })
+      .max(40),
     manufacturer: z.enum(DEVICE_MANUFACTURERS),
     name: z.string().trim().max(255),
     hasRelay: z.boolean(),
     simMsisdn: z
       .string()
       .trim()
-      .refine((v) => v === "" || /^\+[1-9]\d{7,14}$/.test(v), { message: "Format international : +2250700000000" }),
+      .refine((v) => v === "" || /^\+[1-9]\d{7,14}$/.test(v), {
+        message: "Format international : +2250700000000",
+      }),
     simIccid: z
       .string()
       .trim()
-      .refine((v) => v === "" || /^\d{18,22}$/.test(v), { message: "18 à 22 chiffres." }),
+      .refine((v) => v === "" || /^\d{18,22}$/.test(v), {
+        message: "18 à 22 chiffres.",
+      }),
     syncFlespi: z.boolean(),
     flespiChannelId: z.string(),
     flespiDeviceType: z.string(),
     linkExisting: z.boolean(),
     notes: z.string().trim().max(500),
   })
-  .refine((v) => !v.syncFlespi || v.terminalId !== "" || v.manufacturer !== "micodus", {
-    message: "Micodus : l'ID de l'étiquette est requis pour calculer l'ident flespi.",
-    path: ["terminalId"],
-  })
+  .refine(
+    (v) => !v.syncFlespi || v.terminalId !== "" || v.manufacturer !== "micodus",
+    {
+      message:
+        "Micodus : l'ID de l'étiquette est requis pour calculer l'ident flespi.",
+      path: ["terminalId"],
+    },
+  )
   .refine((v) => !v.syncFlespi || v.flespiChannelId !== "", {
     message: "Choisissez un canal.",
     path: ["flespiChannelId"],
@@ -124,10 +153,14 @@ const TEXT_FIELDS: Array<{
     name: "terminalId",
     label: "ID terminal (étiquette)",
     placeholder: "7301151405",
-    hint: "Micodus : ident flespi = « 0 » + ID.",
+    hint: "Micodus : Identifiant derrière le boitier",
   },
   { name: "model", label: "Modèle", placeholder: "MV730" },
-  { name: "name", label: "Nom affiché (flespi)", placeholder: "Véhicule AB-123-CD" },
+  {
+    name: "name",
+    label: "Nom affiché (flespi)",
+    placeholder: "Véhicule AB-123-CD",
+  },
   {
     name: "simMsisdn",
     label: "Numéro SIM",
@@ -137,15 +170,29 @@ const TEXT_FIELDS: Array<{
   { name: "simIccid", label: "ICCID SIM", placeholder: "Optionnel" },
 ];
 
-export function DeviceCreateDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export function DeviceCreateDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
   const create = useCreateDevice();
   const channels = useChannels();
   const health = useFlespiHealth();
-  const form = useForm<Values>({ resolver: zodResolver(schema), defaultValues: DEFAULTS });
+  const form = useForm<Values>({
+    resolver: zodResolver(schema),
+    defaultValues: DEFAULTS,
+  });
   const syncFlespi = useWatch({ control: form.control, name: "syncFlespi" });
-  const deviceTypes = useDeviceTypes(health.data?.protocolName ?? "micodus", undefined, open && syncFlespi);
+  const deviceTypes = useDeviceTypes(
+    health.data?.protocolName ?? "micodus",
+    undefined,
+    open && syncFlespi,
+  );
 
-  const defaultChannel = health.data?.configuredChannelId ?? channels.data?.[0]?.id;
+  const defaultChannel =
+    health.data?.configuredChannelId ?? channels.data?.[0]?.id;
 
   useEffect(() => {
     if (open) form.reset(DEFAULTS);
@@ -169,19 +216,32 @@ export function DeviceCreateDialog({ open, onOpenChange }: { open: boolean; onOp
         });
         onOpenChange(false);
       },
-      onError: (error) => toast.error("Enregistrement impossible", { description: getErrorMessage(error) }),
+      onError: (error) =>
+        toast.error("Enregistrement impossible", {
+          description: getErrorMessage(error),
+        }),
     });
   }
 
   return (
-    <Dialog open={open} onOpenChange={(next) => !create.isPending && onOpenChange(next)}>
+    <Dialog
+      open={open}
+      onOpenChange={(next) => !create.isPending && onOpenChange(next)}
+    >
       <DialogContent className="max-h-[90dvh] overflow-y-auto sm:max-w-2xl">
         <DialogHeader>
           <DialogTitle>Nouveau tracker</DialogTitle>
-          <DialogDescription>Enregistrez le boîtier dans SISBM et, si besoin, créez-le chez flespi.</DialogDescription>
+          <DialogDescription>
+            Enregistrez le boîtier dans SISBM et, si besoin, créez-le chez
+            flespi.
+          </DialogDescription>
         </DialogHeader>
 
-        <form id="device-create-form" noValidate onSubmit={form.handleSubmit(onSubmit)}>
+        <form
+          id="device-create-form"
+          noValidate
+          onSubmit={form.handleSubmit(onSubmit)}
+        >
           <FieldGroup className="gap-4">
             <div className="grid gap-4 sm:grid-cols-2">
               {TEXT_FIELDS.map((f) => (
@@ -190,8 +250,13 @@ export function DeviceCreateDialog({ open, onOpenChange }: { open: boolean; onOp
                   control={form.control}
                   name={f.name}
                   render={({ field, fieldState }) => (
-                    <Field className="gap-1.5" data-invalid={fieldState.invalid}>
-                      <FieldLabel htmlFor={`device-${f.name}`}>{f.label}</FieldLabel>
+                    <Field
+                      className="gap-1.5"
+                      data-invalid={fieldState.invalid}
+                    >
+                      <FieldLabel htmlFor={`device-${f.name}`}>
+                        {f.label}
+                      </FieldLabel>
                       <Input
                         {...field}
                         id={`device-${f.name}`}
@@ -199,8 +264,12 @@ export function DeviceCreateDialog({ open, onOpenChange }: { open: boolean; onOp
                         autoComplete="off"
                         aria-invalid={fieldState.invalid}
                       />
-                      {f.hint ? <FieldDescription>{f.hint}</FieldDescription> : null}
-                      {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                      {f.hint ? (
+                        <FieldDescription>{f.hint}</FieldDescription>
+                      ) : null}
+                      {fieldState.invalid && (
+                        <FieldError errors={[fieldState.error]} />
+                      )}
                     </Field>
                   )}
                 />
@@ -213,15 +282,29 @@ export function DeviceCreateDialog({ open, onOpenChange }: { open: boolean; onOp
                 name="manufacturer"
                 render={({ field }) => (
                   <Field className="gap-1.5">
-                    <FieldLabel htmlFor="device-manufacturer">Fabricant</FieldLabel>
-                    <Select value={field.value} onValueChange={(v) => field.onChange(v as DeviceManufacturer)}>
-                      <SelectTrigger id="device-manufacturer" className="w-full capitalize">
+                    <FieldLabel htmlFor="device-manufacturer">
+                      Fabricant
+                    </FieldLabel>
+                    <Select
+                      value={field.value}
+                      onValueChange={(v) =>
+                        field.onChange(v as DeviceManufacturer)
+                      }
+                    >
+                      <SelectTrigger
+                        id="device-manufacturer"
+                        className="w-full capitalize"
+                      >
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent position="popper">
                         <SelectGroup>
                           {DEVICE_MANUFACTURERS.map((m) => (
-                            <SelectItem key={m} value={m} className="capitalize">
+                            <SelectItem
+                              key={m}
+                              value={m}
+                              className="capitalize"
+                            >
                               {m}
                             </SelectItem>
                           ))}
@@ -235,11 +318,20 @@ export function DeviceCreateDialog({ open, onOpenChange }: { open: boolean; onOp
                 control={form.control}
                 name="hasRelay"
                 render={({ field }) => (
-                  <Field orientation="horizontal" className="self-end rounded-lg border p-2.5">
+                  <Field
+                    orientation="horizontal"
+                    className="self-end rounded-lg border p-2.5"
+                  >
                     <FieldContent>
-                      <FieldLabel htmlFor="device-relay">Relais de coupure</FieldLabel>
+                      <FieldLabel htmlFor="device-relay">
+                        Relais de coupure
+                      </FieldLabel>
                     </FieldContent>
-                    <Switch id="device-relay" checked={field.value} onCheckedChange={field.onChange} />
+                    <Switch
+                      id="device-relay"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
                   </Field>
                 )}
               />
@@ -253,12 +345,19 @@ export function DeviceCreateDialog({ open, onOpenChange }: { open: boolean; onOp
               render={({ field }) => (
                 <Field orientation="horizontal">
                   <FieldContent>
-                    <FieldLabel htmlFor="device-sync">Synchroniser avec flespi</FieldLabel>
+                    <FieldLabel htmlFor="device-sync">
+                      Synchroniser avec flespi
+                    </FieldLabel>
                     <FieldDescription>
-                      Crée le device sur le canal choisi. Sans synchronisation, le tracker reste en stock.
+                      Crée le device sur le canal choisi. Sans synchronisation,
+                      le tracker reste en stock.
                     </FieldDescription>
                   </FieldContent>
-                  <Switch id="device-sync" checked={field.value} onCheckedChange={field.onChange} />
+                  <Switch
+                    id="device-sync"
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
                 </Field>
               )}
             />
@@ -270,11 +369,30 @@ export function DeviceCreateDialog({ open, onOpenChange }: { open: boolean; onOp
                     control={form.control}
                     name="flespiChannelId"
                     render={({ field, fieldState }) => (
-                      <Field className="gap-1.5" data-invalid={fieldState.invalid}>
-                        <FieldLabel htmlFor="device-channel">Canal flespi</FieldLabel>
-                        <Select value={field.value} onValueChange={field.onChange} disabled={channels.isPending}>
-                          <SelectTrigger id="device-channel" className="w-full" aria-invalid={fieldState.invalid}>
-                            <SelectValue placeholder={channels.isPending ? "Chargement…" : "Choisir un canal"} />
+                      <Field
+                        className="gap-1.5"
+                        data-invalid={fieldState.invalid}
+                      >
+                        <FieldLabel htmlFor="device-channel">
+                          Canal flespi
+                        </FieldLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          disabled={channels.isPending}
+                        >
+                          <SelectTrigger
+                            id="device-channel"
+                            className="w-full"
+                            aria-invalid={fieldState.invalid}
+                          >
+                            <SelectValue
+                              placeholder={
+                                channels.isPending
+                                  ? "Chargement…"
+                                  : "Choisir un canal"
+                              }
+                            />
                           </SelectTrigger>
                           <SelectContent position="popper">
                             <SelectGroup>
@@ -286,7 +404,9 @@ export function DeviceCreateDialog({ open, onOpenChange }: { open: boolean; onOp
                             </SelectGroup>
                           </SelectContent>
                         </Select>
-                        {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                        {fieldState.invalid && (
+                          <FieldError errors={[fieldState.error]} />
+                        )}
                       </Field>
                     )}
                   />
@@ -295,8 +415,14 @@ export function DeviceCreateDialog({ open, onOpenChange }: { open: boolean; onOp
                     name="flespiDeviceType"
                     render={({ field }) => (
                       <Field className="gap-1.5">
-                        <FieldLabel htmlFor="device-type">Type de boîtier flespi</FieldLabel>
-                        <Select value={field.value} onValueChange={field.onChange} disabled={deviceTypes.isPending}>
+                        <FieldLabel htmlFor="device-type">
+                          Type de boîtier flespi
+                        </FieldLabel>
+                        <Select
+                          value={field.value}
+                          onValueChange={field.onChange}
+                          disabled={deviceTypes.isPending}
+                        >
                           <SelectTrigger id="device-type" className="w-full">
                             <SelectValue placeholder="Micodus MV730" />
                           </SelectTrigger>
@@ -304,7 +430,12 @@ export function DeviceCreateDialog({ open, onOpenChange }: { open: boolean; onOp
                             <SelectGroup>
                               {(
                                 deviceTypes.data?.deviceTypes ?? [
-                                  { id: 1198, title: "Micodus MV730", name: "mv730", protocol_id: 325 },
+                                  {
+                                    id: 1198,
+                                    title: "Micodus MV730",
+                                    name: "mv730",
+                                    protocol_id: 325,
+                                  },
                                 ]
                               ).map((t) => (
                                 <SelectItem key={t.id} value={t.title}>
@@ -314,7 +445,9 @@ export function DeviceCreateDialog({ open, onOpenChange }: { open: boolean; onOp
                             </SelectGroup>
                           </SelectContent>
                         </Select>
-                        <FieldDescription>Doit appartenir au protocole du canal.</FieldDescription>
+                        <FieldDescription>
+                          Doit appartenir au protocole du canal.
+                        </FieldDescription>
                       </Field>
                     )}
                   />
@@ -330,8 +463,12 @@ export function DeviceCreateDialog({ open, onOpenChange }: { open: boolean; onOp
                         onCheckedChange={(v) => field.onChange(Boolean(v))}
                       />
                       <FieldContent>
-                        <FieldLabel htmlFor="device-link-existing" className="font-normal">
-                          Rattacher le device flespi existant s'il porte déjà cet ident
+                        <FieldLabel
+                          htmlFor="device-link-existing"
+                          className="font-normal"
+                        >
+                          Rattacher le device flespi existant s'il porte déjà
+                          cet ident
                         </FieldLabel>
                       </FieldContent>
                     </Field>
@@ -340,7 +477,8 @@ export function DeviceCreateDialog({ open, onOpenChange }: { open: boolean; onOp
                 <Alert>
                   <Info className="size-4" />
                   <AlertDescription>
-                    Programmez le boîtier sur l'URI du canal (ex. ch1442013.flespi.gw:39142) avec une SIM data active.
+                    Programmez le boîtier sur l'URI du canal (ex.
+                    ch1442013.flespi.gw:39142) avec une SIM data active.
                   </AlertDescription>
                 </Alert>
               </>
@@ -352,7 +490,11 @@ export function DeviceCreateDialog({ open, onOpenChange }: { open: boolean; onOp
               render={({ field }) => (
                 <Field className="gap-1.5">
                   <FieldLabel htmlFor="device-notes">Notes</FieldLabel>
-                  <Textarea {...field} id="device-notes" placeholder="Optionnel" />
+                  <Textarea
+                    {...field}
+                    id="device-notes"
+                    placeholder="Optionnel"
+                  />
                 </Field>
               )}
             />
@@ -360,10 +502,18 @@ export function DeviceCreateDialog({ open, onOpenChange }: { open: boolean; onOp
         </form>
 
         <DialogFooter>
-          <Button variant="outline" disabled={create.isPending} onClick={() => onOpenChange(false)}>
+          <Button
+            variant="outline"
+            disabled={create.isPending}
+            onClick={() => onOpenChange(false)}
+          >
             Annuler
           </Button>
-          <Button type="submit" form="device-create-form" disabled={create.isPending}>
+          <Button
+            type="submit"
+            form="device-create-form"
+            disabled={create.isPending}
+          >
             {create.isPending ? <Spinner data-icon="inline-start" /> : null}
             Enregistrer le tracker
           </Button>

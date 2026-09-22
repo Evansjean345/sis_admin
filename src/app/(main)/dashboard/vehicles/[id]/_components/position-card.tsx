@@ -4,11 +4,24 @@ import { EmptyState } from "@/components/query-state";
 import { StatusBadge } from "@/components/status-badge";
 import { connectionStateMeta } from "@/components/status-labels";
 import { Button } from "@/components/ui/button";
-import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { formatDateTime, formatNumber, formatRelative } from "@/lib/format";
 import type { VehicleDetail } from "@/types/vehicle";
 
-export function PositionCard({ position }: { position: VehicleDetail["lastPosition"] }) {
+export function PositionCard({
+  position,
+  id,
+}: {
+  position: VehicleDetail["lastPosition"];
+  id: VehicleDetail["id"];
+}) {
   if (!position) {
     return (
       <Card>
@@ -31,7 +44,7 @@ export function PositionCard({ position }: { position: VehicleDetail["lastPositi
   const lng = Number(position.longitude);
   const d = 0.01;
   const embed = `https://www.openstreetmap.org/export/embed.html?bbox=${lng - d}%2C${lat - d}%2C${lng + d}%2C${lat + d}&layer=mapnik&marker=${lat}%2C${lng}`;
-  const link = `https://www.openstreetmap.org/?mlat=${lat}&mlon=${lng}#map=16/${lat}/${lng}`;
+  const link = `/dashboard/fleet?vehicle=${id}`;
   const state = connectionStateMeta(position.connectionState);
 
   return (
@@ -39,7 +52,8 @@ export function PositionCard({ position }: { position: VehicleDetail["lastPositi
       <CardHeader>
         <CardTitle>Dernière position</CardTitle>
         <CardDescription>
-          {formatDateTime(position.recordedAt)} · {formatRelative(position.recordedAt)}
+          {formatDateTime(position.recordedAt)} ·{" "}
+          {formatRelative(position.recordedAt)}
         </CardDescription>
         <CardAction>
           <StatusBadge tone={state.tone}>{state.label}</StatusBadge>
@@ -48,12 +62,18 @@ export function PositionCard({ position }: { position: VehicleDetail["lastPositi
       <CardContent className="grid grid-cols-3 gap-3 text-sm">
         <div className="flex flex-col gap-0.5">
           <span className="text-muted-foreground text-xs">Vitesse</span>
-          <span className="font-medium tabular-nums">{formatNumber(position.speedKph, 1)} km/h</span>
+          <span className="font-medium tabular-nums">
+            {formatNumber(position.speedKph, 1)} km/h
+          </span>
         </div>
         <div className="flex flex-col gap-0.5">
           <span className="text-muted-foreground text-xs">Contact</span>
           <span className="font-medium">
-            {position.ignition === null ? "—" : position.ignition ? "Allumé" : "Coupé"}
+            {position.ignition === null
+              ? "—"
+              : position.ignition
+                ? "Allumé"
+                : "Coupé"}
           </span>
         </div>
         <div className="flex flex-col gap-0.5">
@@ -64,9 +84,19 @@ export function PositionCard({ position }: { position: VehicleDetail["lastPositi
         </div>
       </CardContent>
       <div className="relative h-64 border-t">
-        <iframe title="Position du véhicule" src={embed} className="size-full" loading="lazy" />
-        <Button asChild size="sm" variant="secondary" className="absolute top-2 right-2">
-          <a href={link} target="_blank" rel="noreferrer">
+        <iframe
+          title="Position du véhicule"
+          src={embed}
+          className="size-full"
+          loading="lazy"
+        />
+        <Button
+          asChild
+          size="sm"
+          variant="secondary"
+          className="absolute top-2 right-2"
+        >
+          <a href={link} rel="noreferrer">
             <ExternalLink data-icon="inline-start" />
             Ouvrir la carte
           </a>

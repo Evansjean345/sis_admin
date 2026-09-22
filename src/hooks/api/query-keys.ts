@@ -1,4 +1,7 @@
+import type { AuditLogListParams } from "@/types/audit";
 import type { DeviceListParams } from "@/types/device";
+import type { GroupKind, GroupListParams } from "@/types/group";
+import type { OrganizationListParams } from "@/types/organization";
 import type { UserListParams } from "@/types/user";
 import type { VehicleListParams } from "@/types/vehicle";
 
@@ -33,6 +36,28 @@ export const queryKeys = {
     history: (deviceId: string) => ["commands", deviceId, "history"] as const,
     catalog: (deviceId: string) => ["commands", deviceId, "catalog"] as const,
     flespiCatalog: (deviceId: string) => ["commands", deviceId, "flespi-catalog"] as const,
+  },
+  organizations: {
+    all: ["organizations"] as const,
+    list: (params: OrganizationListParams) => ["organizations", "list", params] as const,
+    detail: (id: string) => ["organizations", "detail", id] as const,
+    roles: (id: string) => ["organizations", "roles", id] as const,
+    users: (id: string, params: UserListParams) => ["organizations", "users", id, params] as const,
+  },
+  /** Une seule entrée pour les deux familles : la clé porte le type de groupe. */
+  groups: {
+    all: (kind: GroupKind) => ["groups", kind] as const,
+    list: (kind: GroupKind, params: GroupListParams) => ["groups", kind, "list", params] as const,
+    detail: (kind: GroupKind, id: string) => ["groups", kind, "detail", id] as const,
+    members: (kind: GroupKind, id: string) => ["groups", kind, "members", id] as const,
+  },
+  audit: {
+    all: ["audit"] as const,
+    list: (params: AuditLogListParams) => ["audit", "list", params] as const,
+    actions: (params: Pick<AuditLogListParams, "from" | "to" | "organizationId">) =>
+      ["audit", "actions", params] as const,
+    organization: (id: string, params: AuditLogListParams) => ["audit", "organization", id, params] as const,
+    group: (kind: GroupKind, id: string, params: AuditLogListParams) => ["audit", "group", kind, id, params] as const,
   },
   flespi: {
     all: ["flespi"] as const,

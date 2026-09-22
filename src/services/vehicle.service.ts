@@ -7,17 +7,23 @@ import type {
   VehicleDetail,
   VehicleListParams,
 } from "@/types/vehicle";
+import { prefixAdmin } from "@/lib/axios";
 
 export const vehicleService = {
   /** GET /vehicles?search=&status=&page=&perPage= */
   async list(params: VehicleListParams = {}): Promise<Paginated<Vehicle>> {
-    const { data } = await api.get<Paginated<Vehicle>>("/vehicles", { params });
+    const { data } = await api.get<Paginated<Vehicle>>(
+      `/${prefixAdmin}/vehicles`,
+      { params },
+    );
     return data;
   },
 
   /** GET /vehicles/:id — inclut le boîtier monté et la dernière position. */
   async get(id: string): Promise<VehicleDetail> {
-    const { data } = await api.get<ApiResponse<VehicleDetail>>(`/vehicles/${id}`);
+    const { data } = await api.get<ApiResponse<VehicleDetail>>(
+      `/vehicles/${id}`,
+    );
     return data.data;
   },
 
@@ -29,7 +35,10 @@ export const vehicleService = {
 
   /** PATCH /vehicles/:id — ex. { speedLimitKph: 120 } */
   async update(id: string, payload: UpdateVehiclePayload): Promise<Vehicle> {
-    const { data } = await api.patch<ApiResponse<Vehicle>>(`/vehicles/${id}`, payload);
+    const { data } = await api.patch<ApiResponse<Vehicle>>(
+      `/vehicles/${id}`,
+      payload,
+    );
     return data.data;
   },
 
