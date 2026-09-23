@@ -1,3 +1,4 @@
+import type { OrganizationSummary } from "./admin";
 import type { PaginationParams } from "./api";
 
 export const DEVICE_STATUSES = ["stock", "active", "maintenance", "decommissioned"] as const;
@@ -29,6 +30,8 @@ export interface Device {
   notes: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Organisation propriétaire — ajoutée par les listes et détails `/admin/*`. */
+  organization?: OrganizationSummary | null;
 }
 
 /** Affectation en cours (GET /devices/:id) — colonnes SQL brutes, donc snake_case. */
@@ -47,9 +50,15 @@ export interface DeviceListParams extends PaginationParams {
   /** 3 caractères minimum côté API. */
   search?: string;
   unassigned?: boolean;
+  /** Filtre admin : une seule organisation. */
+  organizationId?: string;
+  /** true : rattachés à flespi · false : jamais synchronisés. */
+  linked?: boolean;
 }
 
 export interface CreateDevicePayload {
+  /** Organisation propriétaire — exigée par les créations `POST /admin/*`. */
+  organizationId: string;
   imei: string;
   terminalId?: string;
   model: string;

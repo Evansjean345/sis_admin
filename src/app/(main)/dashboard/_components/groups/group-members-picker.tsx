@@ -44,12 +44,15 @@ interface Candidate {
 export function GroupMembersPicker({
   family,
   groupId,
+  organizationId,
   currentMemberIds,
   open,
   onOpenChange,
 }: {
   family: GroupFamily;
   groupId: string;
+  /** Organisation du groupe : l'API refuse tout membre d'une autre organisation. */
+  organizationId: string;
   currentMemberIds: string[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -64,8 +67,14 @@ export function GroupMembersPicker({
 
   // Les deux hooks sont appelés à chaque rendu — règle des hooks —, mais seul
   // celui de la famille courante déclenche une requête.
-  const vehicles = useVehicles({ page: 1, perPage: 100, search: searchParam }, { enabled: open && isVehicles });
-  const devices = useDevices({ page: 1, perPage: 100, search: searchParam }, { enabled: open && !isVehicles });
+  const vehicles = useVehicles(
+    { page: 1, perPage: 100, search: searchParam, organizationId },
+    { enabled: open && isVehicles },
+  );
+  const devices = useDevices(
+    { page: 1, perPage: 100, search: searchParam, organizationId },
+    { enabled: open && !isVehicles },
+  );
   const query = isVehicles ? vehicles : devices;
 
   const candidates: Candidate[] = useMemo(() => {

@@ -1,4 +1,4 @@
-import { api } from "@/lib/axios";
+import { adminPath, api } from "@/lib/axios";
 import type { ApiResponse, Paginated } from "@/types/api";
 import type {
   CreateVehiclePayload,
@@ -7,43 +7,38 @@ import type {
   VehicleDetail,
   VehicleListParams,
 } from "@/types/vehicle";
-import { prefixAdmin } from "@/lib/axios";
 
+/**
+ * Véhicules — routes `/admin/vehicles` : toutes les organisations.
+ * Chaque ligne et chaque détail portent leur `organization`.
+ */
 export const vehicleService = {
-  /** GET /vehicles?search=&status=&page=&perPage= */
+  /** GET /admin/vehicles?organizationId=&search=&status=&page=&perPage= */
   async list(params: VehicleListParams = {}): Promise<Paginated<Vehicle>> {
-    const { data } = await api.get<Paginated<Vehicle>>(
-      `/${prefixAdmin}/vehicles`,
-      { params },
-    );
+    const { data } = await api.get<Paginated<Vehicle>>(adminPath("/vehicles"), { params });
     return data;
   },
 
-  /** GET /vehicles/:id — inclut le boîtier monté et la dernière position. */
+  /** GET /admin/vehicles/:id — inclut le boîtier monté et la dernière position. */
   async get(id: string): Promise<VehicleDetail> {
-    const { data } = await api.get<ApiResponse<VehicleDetail>>(
-      `/vehicles/${id}`,
-    );
+    const { data } = await api.get<ApiResponse<VehicleDetail>>(adminPath(`/vehicles/${id}`));
     return data.data;
   },
 
-  /** POST /vehicles */
+  /** POST /admin/vehicles — `organizationId` obligatoire. */
   async create(payload: CreateVehiclePayload): Promise<Vehicle> {
-    const { data } = await api.post<ApiResponse<Vehicle>>("/vehicles", payload);
+    const { data } = await api.post<ApiResponse<Vehicle>>(adminPath("/vehicles"), payload);
     return data.data;
   },
 
-  /** PATCH /vehicles/:id — ex. { speedLimitKph: 120 } */
+  /** PATCH /admin/vehicles/:id — ex. { speedLimitKph: 120 } */
   async update(id: string, payload: UpdateVehiclePayload): Promise<Vehicle> {
-    const { data } = await api.patch<ApiResponse<Vehicle>>(
-      `/vehicles/${id}`,
-      payload,
-    );
+    const { data } = await api.patch<ApiResponse<Vehicle>>(adminPath(`/vehicles/${id}`), payload);
     return data.data;
   },
 
-  /** DELETE /vehicles/:id — archivage logique. */
+  /** DELETE /admin/vehicles/:id — archivage logique. */
   async remove(id: string): Promise<void> {
-    await api.delete(`/vehicles/${id}`);
+    await api.delete(adminPath(`/vehicles/${id}`));
   },
 };

@@ -37,6 +37,7 @@ export function Devices({ view }: { view: DeviceView }) {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<DeviceStatus | "all">("all");
   const [unassigned, setUnassigned] = useState(false);
+  const [organizationId, setOrganizationId] = useState<string | undefined>();
   const [sort, setSort] = useState<DeviceSort>("imei");
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(12);
@@ -52,9 +53,10 @@ export function Devices({ view }: { view: DeviceView }) {
     search: effectiveSearch,
     status: status === "all" ? undefined : status,
     unassigned: unassigned || undefined,
+    organizationId,
   });
-  // Section « en cours d'utilisation » : trackers actifs, indépendamment des filtres.
-  const active = useDevices({ status: "active", perPage: 8 });
+  // Section « en cours d'utilisation » : trackers actifs de l'organisation filtrée.
+  const active = useDevices({ status: "active", perPage: 8, organizationId });
 
   const rows = useMemo(() => sortDevices(devices.data?.data ?? [], sort), [devices.data, sort]);
 
@@ -69,6 +71,7 @@ export function Devices({ view }: { view: DeviceView }) {
     downloadCsv(
       `trackers-${new Date().toISOString().slice(0, 10)}.csv`,
       rows.map((d) => ({
+        organisation: d.organization?.name ?? "",
         imei: d.imei,
         fabricant: d.manufacturer,
         modele: d.model,
@@ -89,7 +92,7 @@ export function Devices({ view }: { view: DeviceView }) {
         <div className="flex flex-col gap-1">
           <h1 className="text-3xl leading-none tracking-tight">Liste des trackers</h1>
           <p className="text-muted-foreground text-sm">
-            Enregistrez et gérez vos trackers pour un suivi efficace de vos véhicules.
+            Tous les trackers de la plateforme : enregistrement, rattachement flespi et montage.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -113,6 +116,8 @@ export function Devices({ view }: { view: DeviceView }) {
         onUnassignedChange={resetPage(setUnassigned)}
         sort={sort}
         onSortChange={setSort}
+        organizationId={organizationId}
+        onOrganizationChange={resetPage(setOrganizationId)}
         refreshing={devices.isFetching}
         onRefresh={() => {
           devices.refetch();
@@ -183,7 +188,7 @@ export function Devices({ view }: { view: DeviceView }) {
         )}
       </div>
 
-      <DeviceCreateDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <DeviceCreateDialog open={createOpen} onOpenChange={setCreateOpen} defaultOrganizationId={organizationId} />
     </div>
   );
 }

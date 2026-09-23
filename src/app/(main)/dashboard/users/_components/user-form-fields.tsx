@@ -60,7 +60,8 @@ export function RoleSelectField<T extends FieldValues>({
 }: {
   control: Control<T>;
   name: FieldPath<T>;
-  roles: Role[];
+  /** `assignable: false` (règle de non-escalade de l'API) grise le rôle. */
+  roles: Array<Pick<Role, "id" | "name"> & { assignable?: boolean }>;
 }) {
   return (
     <Controller
@@ -76,7 +77,7 @@ export function RoleSelectField<T extends FieldValues>({
             <SelectContent position="popper">
               <SelectGroup>
                 {roles.map((role) => (
-                  <SelectItem key={role.id} value={role.id}>
+                  <SelectItem key={role.id} value={role.id} disabled={role.assignable === false}>
                     {role.name}
                   </SelectItem>
                 ))}

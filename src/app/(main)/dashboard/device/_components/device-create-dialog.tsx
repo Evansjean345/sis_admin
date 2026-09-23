@@ -40,6 +40,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { OrganizationSelect } from "@/app/(main)/dashboard/_components/organization/organization-select";
 import { useCreateDevice } from "@/hooks/api/use-devices";
 import {
   useChannels,
@@ -55,6 +56,10 @@ import {
 
 const schema = z
   .object({
+    /** Organisation propriétaire du boîtier — exigée par POST /admin/devices. */
+    organizationId: z
+      .string()
+      .min(1, { message: "Choisir l'organisation propriétaire." }),
     imei: z.string().trim().regex(/^\d+$/, { message: "Chiffres uniquement." }),
     terminalId: z
       .string()
@@ -104,6 +109,7 @@ const schema = z
 type Values = z.infer<typeof schema>;
 
 const DEFAULTS: Values = {
+  organizationId: "",
   imei: "",
   terminalId: "",
   model: "MV730",
@@ -122,6 +128,7 @@ const DEFAULTS: Values = {
 function toPayload(v: Values): CreateDevicePayload {
   const opt = (s: string) => (s === "" ? undefined : s);
   return {
+    organizationId: v.organizationId,
     imei: v.imei,
     terminalId: opt(v.terminalId),
     model: v.model,
@@ -173,9 +180,12 @@ const TEXT_FIELDS: Array<{
 export function DeviceCreateDialog({
   open,
   onOpenChange,
+  defaultOrganizationId,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  /** Organisation présélectionnée (ex. filtre de la liste). */
+  defaultOrganizationId?: string;
 }) {
   const create = useCreateDevice();
   const channels = useChannels();
@@ -195,8 +205,10 @@ export function DeviceCreateDialog({
     health.data?.configuredChannelId ?? channels.data?.[0]?.id;
 
   useEffect(() => {
-    if (open) form.reset(DEFAULTS);
-  }, [open, form]);
+    if (open) {
+      form.reset({ ...DEFAULTS, organizationId: defaultOrganizationId ?? "" });
+    }
+  }, [open, defaultOrganizationId, form]);
 
   // Canal par défaut = FLESPI_CHANNEL_ID du serveur, posé dès qu'il est connu (sans écraser la saisie).
   useEffect(() => {
@@ -243,6 +255,26 @@ export function DeviceCreateDialog({
           onSubmit={form.handleSubmit(onSubmit)}
         >
           <FieldGroup className="gap-4">
+            <Controller
+              control={form.control}
+              name="organizationId"
+              render={({ field, fieldState }) => (
+                <Field className="gap-1.5" data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="device-organization">
+                    Organisation
+                  </FieldLabel>
+                  <OrganizationSelect
+                    id="device-organization"
+                    value={field.value || undefined}
+                    onChange={(id) => field.onChange(id ?? "")}
+                    invalid={fieldState.invalid}
+                  />
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
             <div className="grid gap-4 sm:grid-cols-2">
               {TEXT_FIELDS.map((f) => (
                 <Controller

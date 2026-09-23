@@ -1,13 +1,15 @@
-import { MetricCards } from "./_components/metric-cards";
-import { PerformanceOverview } from "./_components/performance-overview";
-import { SubscriberOverview } from "./_components/subscriber-overview";
+import { Suspense } from "react";
 
+import { LoadingRows } from "@/components/query-state";
+
+import { AdminDashboard } from "./_components/admin-dashboard";
+
+/** Accueil du tableau de bord d'administration — alimenté par /api/v1/admin/*. */
 export default function Page() {
   return (
-    <div className="@container/main flex flex-col gap-4 md:gap-6">
-      <MetricCards />
-      <PerformanceOverview />
-      <SubscriberOverview />
-    </div>
+    // `useSearchParams` (filtre d'organisation) exige une frontière Suspense au build.
+    <Suspense fallback={<LoadingRows rows={8} />}>
+      <AdminDashboard />
+    </Suspense>
   );
 }

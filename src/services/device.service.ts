@@ -1,4 +1,4 @@
-import { api } from "@/lib/axios";
+import { adminPath, api } from "@/lib/axios";
 import { toTrackPoints } from "@/lib/track";
 import type { ApiResponse, Paginated } from "@/types/api";
 import type {
@@ -17,82 +17,86 @@ import type {
 } from "@/types/device";
 import type { TrackPoint, TrackRange } from "@/types/track";
 
+/**
+ * Boîtiers — routes `/admin/devices` : toutes les organisations.
+ * Le montage exige un véhicule de la MÊME organisation que le boîtier.
+ */
 export const deviceService = {
-  /** GET /devices?status=&search=&unassigned= */
+  /** GET /admin/devices?status=&search=&unassigned= */
   async list(params: DeviceListParams = {}): Promise<Paginated<Device>> {
-    const { data } = await api.get<Paginated<Device>>("/devices", { params });
+    const { data } = await api.get<Paginated<Device>>(adminPath("/devices"), { params });
     return data;
   },
 
-  /** GET /devices/:id — inclut l'affectation en cours. */
+  /** GET /admin/devices/:id — inclut l'affectation en cours. */
   async get(id: string): Promise<DeviceDetail> {
-    const { data } = await api.get<ApiResponse<DeviceDetail>>(`/devices/${id}`);
+    const { data } = await api.get<ApiResponse<DeviceDetail>>(adminPath(`/devices/${id}`));
     return data.data;
   },
 
-  /** POST /devices — `syncFlespi: true` crée aussi le device chez flespi. */
+  /** POST /admin/devices — `syncFlespi: true` crée aussi le device chez flespi. */
   async create(payload: CreateDevicePayload): Promise<ApiResponse<Device, CreateDeviceMeta>> {
-    const { data } = await api.post<ApiResponse<Device, CreateDeviceMeta>>("/devices", payload);
+    const { data } = await api.post<ApiResponse<Device, CreateDeviceMeta>>(adminPath("/devices"), payload);
     return data;
   },
 
-  /** PATCH /devices/:id */
+  /** PATCH /admin/devices/:id */
   async update(id: string, payload: UpdateDevicePayload): Promise<Device> {
-    const { data } = await api.patch<ApiResponse<Device>>(`/devices/${id}`, payload);
+    const { data } = await api.patch<ApiResponse<Device>>(adminPath(`/devices/${id}`), payload);
     return data.data;
   },
 
-  /** DELETE /devices/:id — refusé (409) si le boîtier est encore monté. */
+  /** DELETE /admin/devices/:id — refusé (409) si le boîtier est encore monté. */
   async remove(id: string): Promise<void> {
-    await api.delete(`/devices/${id}`);
+    await api.delete(adminPath(`/devices/${id}`));
   },
 
-  /** POST /devices/:id/flespi/sync — rattacher après coup à flespi. */
+  /** POST /admin/devices/:id/flespi/sync — rattacher après coup à flespi. */
   async syncFlespi(id: string, payload: SyncDeviceFlespiPayload): Promise<Device> {
-    const { data } = await api.post<ApiResponse<Device>>(`/devices/${id}/flespi/sync`, payload);
+    const { data } = await api.post<ApiResponse<Device>>(adminPath(`/devices/${id}/flespi/sync`), payload);
     return data.data;
   },
 
-  /** POST /devices/:id/assignment — montage daté sur un véhicule. */
+  /** POST /admin/devices/:id/assignment — montage daté sur un véhicule. */
   async assign(id: string, payload: AssignDevicePayload): Promise<{ deviceId: string; vehicleId: string }> {
     const { data } = await api.post<ApiResponse<{ deviceId: string; vehicleId: string }>>(
-      `/devices/${id}/assignment`,
+      adminPath(`/devices/${id}/assignment`),
       payload,
     );
     return data.data;
   },
 
-  /** DELETE /devices/:id/assignment — démontage. */
+  /** DELETE /admin/devices/:id/assignment — démontage. */
   async unassign(id: string): Promise<void> {
-    await api.delete(`/devices/${id}/assignment`);
+    await api.delete(adminPath(`/devices/${id}/assignment`));
   },
 
-  /** GET /devices/:id/flespi — diagnostic complet (protocole, ident, dernière trame, problèmes). */
+  /** GET /admin/devices/:id/flespi — diagnostic complet (protocole, ident, dernière trame, problèmes). */
   async diagnostic(id: string): Promise<DeviceDiagnostic> {
-    const { data } = await api.get<ApiResponse<DeviceDiagnostic>>(`/devices/${id}/flespi`);
+    const { data } = await api.get<ApiResponse<DeviceDiagnostic>>(adminPath(`/devices/${id}/flespi`));
     return data.data;
   },
 
-  /** GET /devices/:id/flespi/logs?count= — journal de connexion flespi. */
+  /** GET /admin/devices/:id/flespi/logs?count= — journal de connexion flespi. */
   async logs(id: string, params: LogQueryParams = { count: 50 }): Promise<FlespiLogEntry[]> {
-    const { data } = await api.get<ApiResponse<FlespiLogEntry[]>>(`/devices/${id}/flespi/logs`, { params });
+    const { data } = await api.get<ApiResponse<FlespiLogEntry[]>>(adminPath(`/devices/${id}/flespi/logs`), { params });
     return data.data;
   },
 
-  /** GET /devices/:id/flespi/telemetry — dernière valeur de chaque paramètre. */
+  /** GET /admin/devices/:id/flespi/telemetry — dernière valeur de chaque paramètre. */
   async telemetry(id: string): Promise<DeviceTelemetry> {
-    const { data } = await api.get<ApiResponse<DeviceTelemetry>>(`/devices/${id}/flespi/telemetry`);
+    const { data } = await api.get<ApiResponse<DeviceTelemetry>>(adminPath(`/devices/${id}/flespi/telemetry`));
     return data.data;
   },
 
-  /** GET /devices/:id/telemetry/history?from=&to= — messages bruts flespi sur une fenêtre. */
+  /** GET /admin/devices/:id/telemetry/history?from=&to= — messages bruts flespi sur une fenêtre. */
   async telemetryHistory(
     id: string,
     params: Required<Pick<LogQueryParams, "from" | "to">> & { count?: number },
   ): Promise<{ source: "flespi"; count: number; messages: Array<Record<string, unknown>> }> {
     const { data } = await api.get<
       ApiResponse<{ source: "flespi"; count: number; messages: Array<Record<string, unknown>> }>
-    >(`/devices/${id}/telemetry/history`, { params });
+    >(adminPath(`/devices/${id}/telemetry/history`), { params });
     return data.data;
   },
 

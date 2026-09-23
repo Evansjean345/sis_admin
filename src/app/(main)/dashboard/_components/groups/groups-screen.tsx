@@ -6,6 +6,10 @@ import Link from "next/link";
 
 import { Download, Plus, RefreshCw, Search } from "lucide-react";
 
+import {
+  OrganizationCell,
+  OrganizationFilter,
+} from "@/app/(main)/dashboard/_components/organization/organization-select";
 import { MetricCard, metricGridClass } from "@/components/metric-card";
 import { PageHeader } from "@/components/page-header";
 import { PaginationBar } from "@/components/pagination-bar";
@@ -32,6 +36,7 @@ import { GroupRowActions } from "./group-row-actions";
  */
 export function GroupsScreen({ family }: { family: GroupFamily }) {
   const [search, setSearch] = useState("");
+  const [organizationId, setOrganizationId] = useState<string | undefined>();
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
   const [createOpen, setCreateOpen] = useState(false);
@@ -41,6 +46,7 @@ export function GroupsScreen({ family }: { family: GroupFamily }) {
     page,
     perPage,
     search: debouncedSearch || undefined,
+    organizationId,
   });
 
   const rows = groups.data?.data ?? [];
@@ -112,6 +118,13 @@ export function GroupsScreen({ family }: { family: GroupFamily }) {
           </InputGroupAddon>
         </InputGroup>
         <div className="flex flex-1 flex-wrap items-center gap-2 xl:justify-end">
+          <OrganizationFilter
+            value={organizationId}
+            onChange={(id) => {
+              setOrganizationId(id);
+              setPage(1);
+            }}
+          />
           <Button variant="outline" size="sm" onClick={() => groups.refetch()} disabled={groups.isFetching}>
             <RefreshCw data-icon="inline-start" className={groups.isFetching ? "animate-spin" : undefined} />
             Actualiser
@@ -152,6 +165,7 @@ export function GroupsScreen({ family }: { family: GroupFamily }) {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Nom</TableHead>
+                      <TableHead className="hidden md:table-cell">Organisation</TableHead>
                       <TableHead className="hidden lg:table-cell">Description</TableHead>
                       <TableHead className="w-28">Effectif</TableHead>
                       <TableHead className="hidden xl:table-cell">Créé le</TableHead>
@@ -172,6 +186,9 @@ export function GroupsScreen({ family }: { family: GroupFamily }) {
                             <GroupColorDot color={group.color} />
                             <span className="font-medium">{group.name}</span>
                           </Link>
+                        </TableCell>
+                        <TableCell className="hidden max-w-48 md:table-cell">
+                          <OrganizationCell organization={group.organization} />
                         </TableCell>
                         <TableCell className="hidden max-w-sm truncate text-muted-foreground lg:table-cell">
                           {group.description ?? "—"}
@@ -207,7 +224,12 @@ export function GroupsScreen({ family }: { family: GroupFamily }) {
         </CardContent>
       </Card>
 
-      <GroupFormDialog family={family} open={createOpen} onOpenChange={setCreateOpen} />
+      <GroupFormDialog
+        family={family}
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        defaultOrganizationId={organizationId}
+      />
     </div>
   );
 }

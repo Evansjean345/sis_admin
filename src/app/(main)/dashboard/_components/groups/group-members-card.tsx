@@ -25,10 +25,13 @@ export function GroupMembersCard({
   family,
   groupId,
   groupName,
+  organizationId,
   members,
 }: {
   family: GroupFamily;
   groupId: string;
+  /** Organisation du groupe — borne le choix des nouveaux membres. */
+  organizationId: string;
   groupName: string;
   members: GroupMember[];
 }) {
@@ -132,6 +135,7 @@ export function GroupMembersCard({
       <GroupMembersPicker
         family={family}
         groupId={groupId}
+        organizationId={organizationId}
         currentMemberIds={members.map((member) => member.id)}
         open={pickerOpen}
         onOpenChange={setPickerOpen}

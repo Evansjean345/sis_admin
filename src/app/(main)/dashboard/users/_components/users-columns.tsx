@@ -5,6 +5,7 @@ import Link from "next/link";
 import type { ColumnDef } from "@tanstack/react-table";
 import { cn } from "cn";
 
+import { OrganizationCell } from "@/app/(main)/dashboard/_components/organization/organization-select";
 import { StatusBadge } from "@/components/status-badge";
 import { userStatusMeta } from "@/components/status-labels";
 import { Avatar, AvatarBadge, AvatarFallback } from "@/components/ui/avatar";
@@ -77,7 +78,8 @@ export function getUsersColumns(roles: Map<string, Role>): ColumnDef<DataTableFe
       header: "Rôle",
       filterFn: "equalsString",
       cell: ({ row }) => {
-        const role = roles.get(row.original.roleId);
+        // `/admin/users` embarque le rôle : il couvre aussi les rôles propres aux autres organisations.
+        const role = row.original.role ?? roles.get(row.original.roleId);
         return (
           <div className="grid gap-0.5">
             <span className="whitespace-nowrap">{role?.name ?? "—"}</span>
@@ -85,6 +87,12 @@ export function getUsersColumns(roles: Map<string, Role>): ColumnDef<DataTableFe
           </div>
         );
       },
+    },
+    {
+      id: "organization",
+      accessorFn: (row) => row.organization?.name ?? "",
+      header: "Organisation",
+      cell: ({ row }) => <OrganizationCell organization={row.original.organization} />,
     },
     {
       accessorKey: "phone",

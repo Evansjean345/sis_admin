@@ -1,3 +1,4 @@
+export { adminService } from "./admin.service";
 export { auditService } from "./audit.service";
 export { authService } from "./auth.service";
 export { commandService, runWithSync, securityService } from "./command.service";

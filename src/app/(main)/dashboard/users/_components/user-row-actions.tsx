@@ -4,7 +4,7 @@ import { useState } from "react";
 
 import Link from "next/link";
 
-import { Ban, Eye, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Ban, Eye, MoreHorizontal, Pencil, ShieldCheck, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { ConfirmDialog } from "@/components/confirm-dialog";
@@ -17,7 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useCurrentUser } from "@/hooks/api/use-auth";
-import { useDeleteUser, useSuspendUser } from "@/hooks/api/use-users";
+import { useActivateUser, useDeleteUser, useSuspendUser } from "@/hooks/api/use-users";
 import { getErrorMessage } from "@/lib/axios";
 import type { User } from "@/types/user";
 
@@ -27,6 +27,7 @@ export function UserRowActions({ user, onDeleted }: { user: User; onDeleted?: ()
   const [dialog, setDialog] = useState<"edit" | "suspend" | "delete" | null>(null);
   const { data: me } = useCurrentUser();
   const suspend = useSuspendUser();
+  const activate = useActivateUser();
   const remove = useDeleteUser();
   const isSelf = me?.id === user.id;
 
@@ -55,10 +56,25 @@ export function UserRowActions({ user, onDeleted }: { user: User; onDeleted?: ()
             Modifier
           </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem disabled={isSelf || user.status === "suspended"} onClick={() => setDialog("suspend")}>
-            <Ban />
-            Suspendre l'accès
-          </DropdownMenuItem>
+          {user.status === "suspended" ? (
+            <DropdownMenuItem
+              disabled={activate.isPending}
+              onClick={() =>
+                activate.mutate(user.id, {
+                  onSuccess: () => toast.success("Accès réactivé", { description: user.email }),
+                  onError: (error) => toast.error("Réactivation impossible", { description: getErrorMessage(error) }),
+                })
+              }
+            >
+              <ShieldCheck />
+              Réactiver l'accès
+            </DropdownMenuItem>
+          ) : (
+            <DropdownMenuItem disabled={isSelf} onClick={() => setDialog("suspend")}>
+              <Ban />
+              Suspendre l'accès
+            </DropdownMenuItem>
+          )}
           <DropdownMenuItem variant="destructive" disabled={isSelf} onClick={() => setDialog("delete")}>
             <Trash2 />
             Supprimer

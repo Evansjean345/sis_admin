@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-table";
 import { Download, Grid, Plus, RefreshCw, Rows3, Search } from "lucide-react";
 
+import { OrganizationFilter } from "@/app/(main)/dashboard/_components/organization/organization-select";
 import { ErrorState } from "@/components/query-state";
 import { StatusBadge } from "@/components/status-badge";
 import { userStatusMeta } from "@/components/status-labels";
@@ -36,6 +37,7 @@ const EMPTY: User[] = [];
 export function Users() {
   const [pagination, setPagination] = React.useState<PaginationState>({ pageIndex: 0, pageSize: 25 });
   const [status, setStatus] = React.useState<UserStatus | typeof ALL>(ALL);
+  const [organizationId, setOrganizationId] = React.useState<string | undefined>();
   const [sorting, setSorting] = React.useState<SortingState>([{ id: "createdAt", desc: true }]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = React.useState<ColumnVisibilityState>({ search: false });
@@ -48,6 +50,7 @@ export function Users() {
     page: pagination.pageIndex + 1,
     perPage: pagination.pageSize,
     status: status === ALL ? undefined : status,
+    organizationId,
   });
 
   const columns = React.useMemo(() => getUsersColumns(rolesMap), [rolesMap]);
@@ -76,10 +79,11 @@ export function Users() {
     downloadCsv(
       `utilisateurs-${new Date().toISOString().slice(0, 10)}.csv`,
       visibleUsers.map((u) => ({
+        organisation: u.organization?.name ?? "",
         nom: u.fullName,
         email: u.email,
         telephone: u.phone ?? "",
-        role: rolesMap.get(u.roleId)?.name ?? u.roleId,
+        role: u.role?.name ?? rolesMap.get(u.roleId)?.name ?? u.roleId,
         statut: userStatusMeta[u.status].label,
         derniere_connexion: formatDateTime(u.lastLoginAt, ""),
         cree_le: formatDateTime(u.createdAt),
@@ -92,7 +96,7 @@ export function Users() {
       <CardHeader className="border-b has-data-[slot=card-action]:grid-cols-1 md:has-data-[slot=card-action]:grid-cols-[1fr_auto]">
         <CardTitle className="text-xl leading-none">Utilisateurs</CardTitle>
         <CardDescription className="max-w-sm leading-snug">
-          Gérez les membres de votre organisation et leurs accès.
+          Tous les comptes de la plateforme, par organisation, et leurs accès.
         </CardDescription>
         <CardAction className="col-start-1 row-start-auto flex w-full flex-wrap justify-start gap-2 justify-self-stretch md:col-start-2 md:row-span-2 md:row-start-1 md:w-auto md:flex-nowrap md:justify-end md:justify-self-end">
           <InputGroup className="h-7 w-full md:w-64">
@@ -121,6 +125,13 @@ export function Users() {
       <CardContent className="flex flex-col gap-4 px-0">
         <div className="flex flex-wrap items-center justify-between gap-3 px-4">
           <div className="flex flex-wrap items-center gap-3">
+            <OrganizationFilter
+              value={organizationId}
+              onChange={(id) => {
+                setOrganizationId(id);
+                setPagination((p) => ({ ...p, pageIndex: 0 }));
+              }}
+            />
             <Select
               value={roleFilter}
               onValueChange={(value) => table.getColumn("role")?.setFilterValue(value === ALL ? undefined : value)}
@@ -224,7 +235,7 @@ export function Users() {
         )}
       </CardContent>
 
-      <UserCreateDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <UserCreateDialog open={createOpen} onOpenChange={setCreateOpen} defaultOrganizationId={organizationId} />
     </Card>
   );
 }

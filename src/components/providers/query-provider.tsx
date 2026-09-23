@@ -2,7 +2,7 @@
 
 import { type ReactNode, useState } from "react";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { MutationCache, QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { ApiError } from "@/types/api";
 
@@ -13,19 +13,27 @@ function shouldRetry(failureCount: number, error: unknown) {
 }
 
 export function QueryProvider({ children }: { children: ReactNode }) {
-  const [client] = useState(
-    () =>
-      new QueryClient({
-        defaultOptions: {
-          queries: {
-            staleTime: 30_000,
-            refetchOnWindowFocus: false,
-            retry: shouldRetry,
-          },
-          mutations: { retry: false },
-        },
+  const [client] = useState(() => {
+    const queryClient: QueryClient = new QueryClient({
+      /**
+       * Toute écriture réussie (création, suppression, montage, commande…)
+       * périme les compteurs du tableau de bord admin : l'accueil est à jour
+       * dès qu'on y revient, sans attendre le rafraîchissement de 60 s.
+       */
+      mutationCache: new MutationCache({
+        onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin"] }),
       }),
-  );
+      defaultOptions: {
+        queries: {
+          staleTime: 30_000,
+          refetchOnWindowFocus: false,
+          retry: shouldRetry,
+        },
+        mutations: { retry: false },
+      },
+    });
+    return queryClient;
+  });
 
   return <QueryClientProvider client={client}>{children}</QueryClientProvider>;
 }

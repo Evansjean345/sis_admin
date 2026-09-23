@@ -126,6 +126,7 @@ export function DeviceActions({ device, variant = "compact", showDetails = true,
         mode="device"
         deviceId={device.id}
         deviceLabel={device.imei}
+        organizationId={device.organizationId}
         open={dialog === "assign"}
         onOpenChange={close}
       />

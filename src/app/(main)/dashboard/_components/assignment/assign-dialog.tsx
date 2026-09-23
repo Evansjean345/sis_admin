@@ -22,9 +22,16 @@ import { useAssignDevice, useDevices } from "@/hooks/api/use-devices";
 import { useVehicles } from "@/hooks/api/use-vehicles";
 import { getErrorMessage } from "@/lib/axios";
 
-type AssignDialogProps =
+type AssignDialogProps = (
   | { mode: "device"; deviceId: string; deviceLabel: string; vehicleId?: never; vehicleLabel?: never }
-  | { mode: "vehicle"; vehicleId: string; vehicleLabel: string; deviceId?: never; deviceLabel?: never };
+  | { mode: "vehicle"; vehicleId: string; vehicleLabel: string; deviceId?: never; deviceLabel?: never }
+) & {
+  /**
+   * Organisation de la ressource de départ. Le montage exige un véhicule et un
+   * tracker de la MÊME organisation : les candidats sont filtrés dessus.
+   */
+  organizationId: string;
+};
 
 /**
  * Montage DATÉ d'un tracker sur un véhicule (POST /devices/:id/assignment).
@@ -40,8 +47,15 @@ export function AssignDialog({
   const [notes, setNotes] = useState("");
   const assign = useAssignDevice();
 
-  const vehicles = useVehicles({ perPage: 100, status: "active" });
-  const devices = useDevices({ perPage: 100, unassigned: true });
+  const organizationId = props.organizationId;
+  const vehicles = useVehicles(
+    { perPage: 100, status: "active", organizationId },
+    { enabled: open && props.mode === "device" },
+  );
+  const devices = useDevices(
+    { perPage: 100, unassigned: true, organizationId },
+    { enabled: open && props.mode === "vehicle" },
+  );
 
   useEffect(() => {
     if (open) {

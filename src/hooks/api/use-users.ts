@@ -72,3 +72,13 @@ export function useDeleteUser() {
       queryClient.invalidateQueries({ queryKey: queryKeys.users.all }),
   });
 }
+
+/** POST /admin/users/:id/activate — lève une suspension (et le verrouillage). */
+export function useActivateUser() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => userService.activate(id),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: queryKeys.users.all }),
+  });
+}

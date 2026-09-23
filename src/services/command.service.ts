@@ -1,4 +1,4 @@
-import { api } from "@/lib/axios";
+import { adminPath, api } from "@/lib/axios";
 import type { ApiResponse } from "@/types/api";
 import type {
   BusinessCommandSlug,
@@ -17,7 +17,7 @@ import type {
 /**
  * =========================================================================
  *  COMMANDES BOÎTIER — règle d'or : toute commande est suivie d'un
- *  POST /devices/:id/commands/sync
+ *  POST /admin/devices/:id/commands/sync
  * =========================================================================
  *
  * Le boîtier acquitte en général 2 à 3 s après l'émission. On synchronise
@@ -30,7 +30,7 @@ const SYNC_DELAYS_MS = [2500, 4000] as const;
 const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
 async function syncCommands(deviceId: string): Promise<CommandSyncReport> {
-  const { data } = await api.post<ApiResponse<CommandSyncReport>>(`/devices/${deviceId}/commands/sync`);
+  const { data } = await api.post<ApiResponse<CommandSyncReport>>(adminPath(`/devices/${deviceId}/commands/sync`));
   return data.data;
 }
 
@@ -68,32 +68,39 @@ export const commandService = {
 
   /** GET /devices/:id/commands — catalogue métier SISBM. */
   async catalog(deviceId: string): Promise<CommandCatalogEntry[]> {
-    const { data } = await api.get<ApiResponse<CommandCatalogEntry[]>>(`/devices/${deviceId}/commands`);
+    const { data } = await api.get<ApiResponse<CommandCatalogEntry[]>>(adminPath(`/devices/${deviceId}/commands`));
     return data.data;
   },
 
   /** GET /devices/:id/flespi/commands — catalogue réel accepté par CE boîtier. */
   async flespiCatalog(deviceId: string): Promise<FlespiCommandDefinition[]> {
-    const { data } = await api.get<ApiResponse<FlespiCommandDefinition[]>>(`/devices/${deviceId}/flespi/commands`);
+    const { data } = await api.get<ApiResponse<FlespiCommandDefinition[]>>(
+      adminPath(`/devices/${deviceId}/flespi/commands`),
+    );
     return data.data;
   },
 
   /** GET /devices/:id/commands/history */
   async history(deviceId: string): Promise<CommandHistoryEntry[]> {
-    const { data } = await api.get<ApiResponse<CommandHistoryEntry[]>>(`/devices/${deviceId}/commands/history`);
+    const { data } = await api.get<ApiResponse<CommandHistoryEntry[]>>(
+      adminPath(`/devices/${deviceId}/commands/history`),
+    );
     return data.data;
   },
 
   /** DELETE /devices/:id/commands/:commandId — annule une commande encore en file. */
   async cancel(deviceId: string, commandId: string): Promise<void> {
-    await api.delete(`/devices/${deviceId}/commands/${commandId}`);
+    await api.delete(adminPath(`/devices/${deviceId}/commands/${commandId}`));
     await syncCommands(deviceId).catch(() => undefined);
   },
 
   /** POST /devices/:id/commands/<slug> + sync */
   run(deviceId: string, slug: BusinessCommandSlug, params: CommandParams): Promise<ExecutedCommand<CommandAccepted>> {
     return runWithSync(deviceId, async () => {
-      const { data } = await api.post<ApiResponse<CommandAccepted>>(`/devices/${deviceId}/commands/${slug}`, params);
+      const { data } = await api.post<ApiResponse<CommandAccepted>>(
+        adminPath(`/devices/${deviceId}/commands/${slug}`),
+        params,
+      );
       return data.data;
     });
   },
@@ -101,12 +108,20 @@ export const commandService = {
   /** POST /devices/:id/commands/send (commande flespi brute) + sync */
   send(deviceId: string, payload: RawCommandPayload): Promise<ExecutedCommand<CommandAccepted>> {
     return runWithSync(deviceId, async () => {
-      const { data } = await api.post<ApiResponse<CommandAccepted>>(`/devices/${deviceId}/commands/send`, payload);
+      const { data } = await api.post<ApiResponse<CommandAccepted>>(
+        adminPath(`/devices/${deviceId}/commands/send`),
+        payload,
+      );
       return data.data;
     });
   },
 };
 
+/**
+ * Immobilisation : reste sur les routes `/security/*` (pas de variante admin).
+ * Le cas d'usage applique le garde-fou de vitesse, la fraîcheur de position et
+ * la double validation dans l'organisation de l'OPÉRATEUR connecté.
+ */
 export const securityService = {
   /**
    * POST /security/immobilizations + sync.

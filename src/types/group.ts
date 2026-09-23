@@ -1,3 +1,4 @@
+import type { OrganizationSummary } from "./admin";
 import type { PaginationParams } from "./api";
 
 /**
@@ -23,6 +24,8 @@ export interface Group {
   updatedAt: string;
   /** Effectif du groupe, calculé par l'API en une requête agrégée. */
   membersCount: number;
+  /** Organisation propriétaire — ajoutée par les listes et détails `/admin/*`. */
+  organization?: OrganizationSummary | null;
 }
 
 /**
@@ -59,9 +62,13 @@ export interface MembershipChange {
 
 export interface GroupListParams extends PaginationParams {
   search?: string;
+  /** Filtre admin : une seule organisation. */
+  organizationId?: string;
 }
 
 export interface CreateGroupPayload {
+  /** Organisation propriétaire — exigée par les créations `POST /admin/*`. */
+  organizationId: string;
   /** 2 à 80 caractères, unique par organisation (casse ignorée). */
   name: string;
   description?: string;
@@ -69,7 +76,8 @@ export interface CreateGroupPayload {
   color?: string;
 }
 
-export type UpdateGroupPayload = Partial<CreateGroupPayload>;
+/** L'organisation d'un groupe est figée à la création. */
+export type UpdateGroupPayload = Partial<Omit<CreateGroupPayload, "organizationId">>;
 
 /** Plafond d'un lot d'affectation côté API : au-delà, c'est un import. */
 export const MAX_GROUP_MEMBERS = 200;

@@ -3,10 +3,11 @@
 import { useEffect } from "react";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { Controller, useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
 
+import { OrganizationSelect } from "@/app/(main)/dashboard/_components/organization/organization-select";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -31,6 +32,8 @@ const HEX = /^#[0-9a-fA-F]{6}$/;
 
 /** Mêmes bornes que `group_validators.ts` : une saisie refusée ici l'aurait été là. */
 const schema = z.object({
+  /** Organisation du groupe : exigée à la création (POST /admin/…-groups), figée ensuite. */
+  organizationId: z.string().min(1, { message: "Choisir l'organisation du groupe." }),
   name: z.string().trim().min(2, { message: "2 caractères minimum." }).max(80, { message: "80 caractères maximum." }),
   description: z.string().trim().max(300, { message: "300 caractères maximum." }),
   color: z
@@ -41,7 +44,7 @@ const schema = z.object({
 
 type Values = z.infer<typeof schema>;
 
-const DEFAULTS: Values = { name: "", description: "", color: "" };
+const DEFAULTS: Values = { organizationId: "", name: "", description: "", color: "" };
 
 /**
  * Création et modification d'un groupe.
@@ -55,6 +58,7 @@ export function GroupFormDialog({
   open,
   onOpenChange,
   onCreated,
+  defaultOrganizationId,
 }: {
   family: GroupFamily;
   /** `undefined` → création. */
@@ -62,6 +66,8 @@ export function GroupFormDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onCreated?: (group: Group) => void;
+  /** Organisation présélectionnée à la création (ex. filtre de la liste). */
+  defaultOrganizationId?: string;
 }) {
   const create = useCreateGroup(family.kind);
   const update = useUpdateGroup(family.kind);
@@ -74,10 +80,15 @@ export function GroupFormDialog({
     if (!open) return;
     form.reset(
       group
-        ? { name: group.name, description: group.description ?? "", color: group.color ?? "" }
-        : { ...DEFAULTS, color: "" },
+        ? {
+            organizationId: group.organizationId,
+            name: group.name,
+            description: group.description ?? "",
+            color: group.color ?? "",
+          }
+        : { ...DEFAULTS, organizationId: defaultOrganizationId ?? "", color: "" },
     );
-  }, [open, group, form]);
+  }, [open, group, defaultOrganizationId, form]);
 
   function onSubmit(values: Values) {
     const payload = {
@@ -100,14 +111,17 @@ export function GroupFormDialog({
       return;
     }
 
-    create.mutate(payload, {
-      onSuccess: (created) => {
-        toast.success("Groupe créé", { description: created.name });
-        onOpenChange(false);
-        onCreated?.(created);
+    create.mutate(
+      { ...payload, organizationId: values.organizationId },
+      {
+        onSuccess: (created) => {
+          toast.success("Groupe créé", { description: created.name });
+          onOpenChange(false);
+          onCreated?.(created);
+        },
+        onError: (error) => toast.error("Création impossible", { description: getErrorMessage(error) }),
       },
-      onError: (error) => toast.error("Création impossible", { description: getErrorMessage(error) }),
-    });
+    );
   }
 
   return (
@@ -117,13 +131,30 @@ export function GroupFormDialog({
           <DialogTitle>{isEdit ? `Modifier ${group?.name}` : `Nouvelle ${family.singular}`}</DialogTitle>
           <DialogDescription>
             {isEdit
-              ? "Le nom doit rester unique dans votre organisation."
+              ? "Le nom doit rester unique dans l'organisation du groupe."
               : `Le groupe est créé vide : vous y ajouterez vos ${family.memberPlural} ensuite.`}
           </DialogDescription>
         </DialogHeader>
 
         <form id="group-form" noValidate onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup className="gap-4">
+            <Controller
+              control={form.control}
+              name="organizationId"
+              render={({ field, fieldState }) => (
+                <Field className="gap-1.5" data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="field-group-organization">Organisation</FieldLabel>
+                  <OrganizationSelect
+                    id="field-group-organization"
+                    value={field.value || undefined}
+                    onChange={(id) => field.onChange(id ?? "")}
+                    invalid={fieldState.invalid}
+                    disabled={isEdit}
+                  />
+                  {fieldState.invalid && <FieldError errors={[fieldState.error]} />}
+                </Field>
+              )}
+            />
             <Field className="gap-1.5" data-invalid={Boolean(form.formState.errors.name)}>
               <FieldLabel htmlFor="field-group-name">Nom</FieldLabel>
               <Input

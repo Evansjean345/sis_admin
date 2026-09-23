@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { FieldGroup } from "@/components/ui/field";
 import { Spinner } from "@/components/ui/spinner";
-import { useRoles } from "@/hooks/api/use-roles";
+import { useOrganizationRoles } from "@/hooks/api/use-organizations";
 import { useUpdateUser } from "@/hooks/api/use-users";
 import { getErrorMessage } from "@/lib/axios";
 import type { UpdateUserPayload, User } from "@/types/user";
@@ -48,7 +48,8 @@ export function UserEditDialog({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const roles = useRoles();
+  // Rôles de l'organisation DU COMPTE (système + propres) : un rôle d'un autre client serait refusé.
+  const roles = useOrganizationRoles(open ? user.organizationId : undefined);
   const update = useUpdateUser();
   const form = useForm<Values>({ resolver: zodResolver(schema) });
 

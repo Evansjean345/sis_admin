@@ -14,7 +14,15 @@ import { ApiError, type ApiErrorBody } from "@/types/api";
  * - sur 401 : purge la session et renvoie vers la page de connexion
  */
 const API_URL = (process.env.NEXT_PUBLIC_URL ?? "").replace(/\/+$/, "");
+/**
+ * Préfixe des routes du tableau de bord d'administration (`/api/v1/admin/*`) :
+ * périmètre plateforme, toutes organisations, joker `*` exigé.
+ */
 export const prefixAdmin = "admin";
+
+/** `adminPath("/vehicles")` → `/admin/vehicles` */
+export const adminPath = (path: string): string =>
+  `/${prefixAdmin}${path.startsWith("/") ? path : `/${path}`}`;
 
 export const LOGIN_PATH = "/auth/v2/login";
 

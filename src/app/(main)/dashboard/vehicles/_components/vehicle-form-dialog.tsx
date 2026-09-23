@@ -40,6 +40,7 @@ import {
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
+import { OrganizationSelect } from "@/app/(main)/dashboard/_components/organization/organization-select";
 import { useCreateVehicle, useUpdateVehicle } from "@/hooks/api/use-vehicles";
 import { getErrorMessage } from "@/lib/axios";
 import { toNumber } from "@/lib/format";
@@ -66,6 +67,10 @@ const optionalInt = (min: number, max: number, label: string) =>
     );
 
 const schema = z.object({
+  /** Organisation propriétaire : exigée à la création, figée ensuite. */
+  organizationId: z
+    .string()
+    .min(1, { message: "Choisir l'organisation propriétaire." }),
   registration: z
     .string()
     .trim()
@@ -93,8 +98,9 @@ const schema = z.object({
 
 type Values = z.infer<typeof schema>;
 
-function toDefaults(vehicle?: Vehicle): Values {
+function toDefaults(vehicle?: Vehicle, organizationId?: string): Values {
   return {
+    organizationId: vehicle?.organizationId ?? organizationId ?? "",
     registration: vehicle?.registration ?? "",
     label: vehicle?.label ?? "",
     brand: vehicle?.brand ?? "",
@@ -117,6 +123,7 @@ function toPayload(values: Values): CreateVehiclePayload {
   const opt = (v: string) => (v === "" ? undefined : v);
   const num = (v: string) => (v === "" ? undefined : Number(v));
   return {
+    organizationId: values.organizationId,
     registration: values.registration,
     label: opt(values.label),
     brand: opt(values.brand),
@@ -161,23 +168,26 @@ export function VehicleFormDialog({
   open,
   onOpenChange,
   vehicle,
+  defaultOrganizationId,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   /** Absent = création. */
   vehicle?: Vehicle;
+  /** Organisation présélectionnée à la création (ex. filtre de la liste). */
+  defaultOrganizationId?: string;
 }) {
   const create = useCreateVehicle();
   const update = useUpdateVehicle();
   const pending = create.isPending || update.isPending;
   const form = useForm<Values>({
     resolver: zodResolver(schema),
-    defaultValues: toDefaults(vehicle),
+    defaultValues: toDefaults(vehicle, defaultOrganizationId),
   });
 
   useEffect(() => {
-    if (open) form.reset(toDefaults(vehicle));
-  }, [open, vehicle, form]);
+    if (open) form.reset(toDefaults(vehicle, defaultOrganizationId));
+  }, [open, vehicle, defaultOrganizationId, form]);
 
   function onSubmit(values: Values) {
     const payload = toPayload(values);
@@ -197,7 +207,7 @@ export function VehicleFormDialog({
         ),
     };
     if (vehicle) {
-      const { vin: _vin, ...rest } = payload;
+      const { vin: _vin, organizationId: _org, ...rest } = payload;
       update.mutate({ id: vehicle.id, payload: rest }, handlers);
     } else {
       create.mutate(payload, handlers);
@@ -223,6 +233,32 @@ export function VehicleFormDialog({
           onSubmit={form.handleSubmit(onSubmit)}
         >
           <FieldGroup className="gap-4">
+            <Controller
+              control={form.control}
+              name="organizationId"
+              render={({ field, fieldState }) => (
+                <Field className="gap-1.5" data-invalid={fieldState.invalid}>
+                  <FieldLabel htmlFor="vehicle-organization">
+                    Organisation
+                  </FieldLabel>
+                  <OrganizationSelect
+                    id="vehicle-organization"
+                    value={field.value || undefined}
+                    onChange={(id) => field.onChange(id ?? "")}
+                    invalid={fieldState.invalid}
+                    disabled={Boolean(vehicle)}
+                  />
+                  {vehicle ? (
+                    <FieldDescription>
+                      Un véhicule ne change pas d'organisation.
+                    </FieldDescription>
+                  ) : null}
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
             <div className="grid gap-4 sm:grid-cols-2">
               <Controller
                 control={form.control}

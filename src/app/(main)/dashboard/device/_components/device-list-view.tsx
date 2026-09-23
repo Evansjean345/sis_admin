@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { OrganizationCell } from "@/app/(main)/dashboard/_components/organization/organization-select";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatDateTime } from "@/lib/format";
@@ -16,6 +17,7 @@ export function DeviceListView({ devices }: { devices: Device[] }) {
         <TableHeader>
           <TableRow>
             <TableHead className="pl-0">Identifiant (IMEI)</TableHead>
+            <TableHead className="hidden md:table-cell">Organisation</TableHead>
             <TableHead className="hidden md:table-cell">Fournisseur</TableHead>
             <TableHead className="hidden sm:table-cell">Modèle</TableHead>
             <TableHead className="hidden lg:table-cell">SIM</TableHead>
@@ -41,6 +43,9 @@ export function DeviceListView({ devices }: { devices: Device[] }) {
                     <FlespiBadge device={device} />
                   </span>
                 </div>
+              </TableCell>
+              <TableCell className="hidden max-w-48 md:table-cell">
+                <OrganizationCell organization={device.organization} />
               </TableCell>
               <TableCell className="hidden capitalize md:table-cell">{device.manufacturer}</TableCell>
               <TableCell className="hidden text-muted-foreground sm:table-cell">

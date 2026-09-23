@@ -2,6 +2,7 @@
 
 import { ArrowUpDown, RefreshCw, Search, SlidersHorizontal } from "lucide-react";
 
+import { OrganizationFilter } from "@/app/(main)/dashboard/_components/organization/organization-select";
 import { deviceStatusMeta } from "@/components/status-labels";
 import { Button } from "@/components/ui/button";
 import {
@@ -34,6 +35,9 @@ interface DeviceToolbarProps {
   onSortChange: (value: DeviceSort) => void;
   refreshing: boolean;
   onRefresh: () => void;
+  /** Filtre admin : une seule organisation (absent = toutes). */
+  organizationId: string | undefined;
+  onOrganizationChange: (value: string | undefined) => void;
 }
 
 export function DeviceToolbar(props: DeviceToolbarProps) {
@@ -57,6 +61,7 @@ export function DeviceToolbar(props: DeviceToolbarProps) {
         {tooShort ? <span className="text-muted-foreground text-xs">Saisissez au moins 3 chiffres.</span> : null}
       </div>
       <div className="flex flex-1 flex-wrap items-center gap-2 xl:justify-end">
+        <OrganizationFilter value={props.organizationId} onChange={props.onOrganizationChange} />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="outline" size="sm">

@@ -1,3 +1,4 @@
+import type { ActivityParams, AdminCommandListParams, AdminStatsParams } from "@/types/admin";
 import type { AuditLogListParams } from "@/types/audit";
 import type { DeviceListParams } from "@/types/device";
 import type { GroupKind, GroupListParams } from "@/types/group";
@@ -7,6 +8,18 @@ import type { VehicleListParams } from "@/types/vehicle";
 
 /** Clés React Query centralisées : une invalidation = un préfixe. */
 export const queryKeys = {
+  /** Tableau de bord admin (/api/v1/admin/*) : invalider `admin.all` rafraîchit tous les compteurs. */
+  admin: {
+    all: ["admin"] as const,
+    overview: ["admin", "overview"] as const,
+    activity: (params: ActivityParams) => ["admin", "activity", params] as const,
+    organizationsStats: ["admin", "organizations", "stats"] as const,
+    usersStats: (params: AdminStatsParams) => ["admin", "users", "stats", params] as const,
+    vehiclesStats: (params: AdminStatsParams) => ["admin", "vehicles", "stats", params] as const,
+    devicesStats: (params: AdminStatsParams) => ["admin", "devices", "stats", params] as const,
+    commandsStats: (params: AdminStatsParams) => ["admin", "commands", "stats", params] as const,
+    commands: (params: AdminCommandListParams) => ["admin", "commands", "list", params] as const,
+  },
   auth: {
     me: ["auth", "me"] as const,
   },

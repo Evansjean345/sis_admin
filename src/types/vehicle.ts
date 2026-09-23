@@ -1,3 +1,4 @@
+import type { OrganizationSummary } from "./admin";
 import type { PaginationParams } from "./api";
 
 export const VEHICLE_TYPES = [
@@ -35,6 +36,8 @@ export interface Vehicle {
   notes: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Organisation propriétaire — ajoutée par les listes et détails `/admin/*`. */
+  organization?: OrganizationSummary | null;
 }
 
 export type ConnectionState = "online" | "offline" | "stale" | (string & {});
@@ -57,11 +60,15 @@ export interface VehicleDetail extends Vehicle {
 }
 
 export interface VehicleListParams extends PaginationParams {
+  /** Filtre admin : une seule organisation. */
+  organizationId?: string;
   search?: string;
   status?: VehicleStatus;
 }
 
 export interface CreateVehiclePayload {
+  /** Organisation propriétaire — exigée par les créations `POST /admin/*`. */
+  organizationId: string;
   registration: string;
   vin?: string;
   label?: string;

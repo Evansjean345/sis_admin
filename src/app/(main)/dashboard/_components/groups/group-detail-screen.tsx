@@ -112,7 +112,13 @@ export function GroupDetailScreen({ family, id }: { family: GroupFamily; id: str
             </CardContent>
           </Card>
 
-          <GroupMembersCard family={family} groupId={data.id} groupName={data.name} members={data.members} />
+          <GroupMembersCard
+            family={family}
+            groupId={data.id}
+            groupName={data.name}
+            organizationId={data.organizationId}
+            members={data.members}
+          />
         </TabsContent>
 
         <TabsContent value="audit" className="pt-4">

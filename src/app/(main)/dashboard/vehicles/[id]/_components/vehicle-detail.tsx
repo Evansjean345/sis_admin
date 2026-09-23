@@ -251,6 +251,7 @@ export function VehicleDetailView({ id }: { id: string }) {
         mode="vehicle"
         vehicleId={v.id}
         vehicleLabel={v.registration}
+        organizationId={v.organizationId}
         open={dialog === "assign"}
         onOpenChange={close}
       />

@@ -30,6 +30,9 @@ export function DeviceGridView({ devices }: { devices: Device[] }) {
           <CardHeader>
             <CardTitle className="truncate font-mono">{device.imei}</CardTitle>
             <CardDescription className="truncate">
+              {device.organization ? (
+                <span className="font-medium text-foreground">{device.organization.name} · </span>
+              ) : null}
               {device.model} · <span className="capitalize">{device.manufacturer}</span> ·{" "}
               {formatDate(device.createdAt)}
             </CardDescription>

@@ -6,6 +6,10 @@ import Link from "next/link";
 
 import { Download, Plus, RefreshCw, Search, ShieldCheck, Truck } from "lucide-react";
 
+import {
+  OrganizationCell,
+  OrganizationFilter,
+} from "@/app/(main)/dashboard/_components/organization/organization-select";
 import { PageHeader } from "@/components/page-header";
 import { PaginationBar } from "@/components/pagination-bar";
 import { EmptyState, ErrorState, LoadingRows } from "@/components/query-state";
@@ -29,6 +33,7 @@ const ALL = "all";
 export function Vehicles() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<VehicleStatus | typeof ALL>(ALL);
+  const [organizationId, setOrganizationId] = useState<string | undefined>();
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(25);
   const [createOpen, setCreateOpen] = useState(false);
@@ -39,6 +44,7 @@ export function Vehicles() {
     perPage,
     search: debouncedSearch || undefined,
     status: status === ALL ? undefined : status,
+    organizationId,
   });
 
   const rows = vehicles.data?.data ?? [];
@@ -47,6 +53,7 @@ export function Vehicles() {
     downloadCsv(
       `vehicules-${new Date().toISOString().slice(0, 10)}.csv`,
       rows.map((v) => ({
+        organisation: v.organization?.name ?? "",
         immatriculation: v.registration,
         libelle: v.label ?? "",
         marque: v.brand ?? "",
@@ -65,7 +72,7 @@ export function Vehicles() {
     <div className="flex flex-col gap-4">
       <PageHeader
         title="Véhicules"
-        description="Gérez votre flotte, les limites de vitesse et l'immobilisation à distance."
+        description="Tous les véhicules de la plateforme : flotte, limites de vitesse et immobilisation à distance."
         actions={
           <>
             <Button variant="outline" onClick={exportCsv} disabled={rows.length === 0}>
@@ -96,6 +103,13 @@ export function Vehicles() {
           </InputGroupAddon>
         </InputGroup>
         <div className="flex flex-1 flex-wrap items-center gap-2 xl:justify-end">
+          <OrganizationFilter
+            value={organizationId}
+            onChange={(id) => {
+              setOrganizationId(id);
+              setPage(1);
+            }}
+          />
           <Select
             value={status}
             onValueChange={(v) => {
@@ -156,6 +170,7 @@ export function Vehicles() {
                   <TableHeader>
                     <TableRow>
                       <TableHead>Immatriculation</TableHead>
+                      <TableHead className="hidden md:table-cell">Organisation</TableHead>
                       <TableHead className="hidden md:table-cell">Marque / modèle</TableHead>
                       <TableHead className="hidden lg:table-cell">Type</TableHead>
                       <TableHead>Limite</TableHead>
@@ -182,6 +197,9 @@ export function Vehicles() {
                               <span className="font-medium">{v.registration}</span>
                               {v.label ? <span className="text-muted-foreground text-xs">{v.label}</span> : null}
                             </Link>
+                          </TableCell>
+                          <TableCell className="hidden max-w-48 md:table-cell">
+                            <OrganizationCell organization={v.organization} />
                           </TableCell>
                           <TableCell className="hidden md:table-cell">
                             <div className="flex flex-col">
@@ -240,7 +258,7 @@ export function Vehicles() {
         </CardContent>
       </Card>
 
-      <VehicleFormDialog open={createOpen} onOpenChange={setCreateOpen} />
+      <VehicleFormDialog open={createOpen} onOpenChange={setCreateOpen} defaultOrganizationId={organizationId} />
     </div>
   );
 }

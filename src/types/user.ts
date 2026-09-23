@@ -1,3 +1,4 @@
+import type { OrganizationSummary } from "./admin";
 import type { PaginationParams } from "./api";
 import type { UserRole } from "./role";
 
@@ -20,17 +21,28 @@ export interface User {
   passwordChangedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Organisation propriétaire — ajoutée par les listes et détails `/admin/*`. */
+  organization?: OrganizationSummary | null;
+  /** Rôle résumé — ajouté par la liste `/admin/users`. */
+  role?: { id: string; code: string; name: string } | null;
 }
 
-export interface UserDetail extends User {
+export interface UserDetail extends Omit<User, "role"> {
   role?: UserRole;
 }
 
 export interface UserListParams extends PaginationParams {
   status?: UserStatus;
+  /** Filtres admin. */
+  organizationId?: string;
+  roleId?: string;
+  /** Nom complet ou e-mail. */
+  search?: string;
 }
 
 export interface CreateUserPayload {
+  /** Organisation propriétaire — exigée par les créations `POST /admin/*`. */
+  organizationId: string;
   email: string;
   password: string;
   fullName: string;

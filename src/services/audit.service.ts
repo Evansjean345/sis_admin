@@ -1,4 +1,4 @@
-import { api } from "@/lib/axios";
+import { adminPath, api } from "@/lib/axios";
 import type { AuditActions, AuditLogListParams, AuditLogPage } from "@/types/audit";
 
 /**
@@ -13,13 +13,13 @@ import type { AuditActions, AuditLogListParams, AuditLogPage } from "@/types/aud
 export const auditService = {
   /** GET /audit-logs — fenêtre par défaut : 30 jours glissants, plafond 366. */
   async list(params: AuditLogListParams = {}): Promise<AuditLogPage> {
-    const { data } = await api.get<AuditLogPage>("/audit-logs", { params });
+    const { data } = await api.get<AuditLogPage>(adminPath("/audit-logs"), { params });
     return data;
   },
 
   /** GET /audit-logs/actions — valeurs distinctes d'`action` sur la fenêtre. */
   async actions(params: Pick<AuditLogListParams, "from" | "to" | "organizationId"> = {}): Promise<AuditActions> {
-    const { data } = await api.get<AuditActions>("/audit-logs/actions", { params });
+    const { data } = await api.get<AuditActions>(adminPath("/audit-logs/actions"), { params });
     return data;
   },
 };

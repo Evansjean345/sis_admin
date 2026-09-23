@@ -42,6 +42,7 @@ export const vehicleTypeLabels: Record<VehicleType, string> = {
 const commandStatusMap: Record<string, Meta> = {
   pending_validation: { label: "À valider", tone: "warning" },
   validated: { label: "Validée", tone: "info" },
+  approved: { label: "Approuvée", tone: "info" },
   rejected: { label: "Rejetée", tone: "danger" },
   queued: { label: "En file", tone: "info" },
   sent: { label: "Envoyée", tone: "info" },
